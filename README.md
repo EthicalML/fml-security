@@ -7,7 +7,7 @@
 
 <table>
 <tr>
-<td width="60%">
+<td width="70%">
 <h1>Flawed Machine Learning Security</h1>
 </td>
 <td>
