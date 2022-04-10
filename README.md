@@ -1,3 +1,10 @@
+[![Awesome](images/awesome.svg)](https://github.com/sindresorhus/awesome)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-YES-green.svg)](https://github.com/EthicalML/awesome-production-machine-learning/graphs/commit-activity)
+![GitHub](https://img.shields.io/badge/Release-PROD-yellow.svg)
+![GitHub](https://img.shields.io/badge/Languages-MULTI-blue.svg)
+![GitHub](https://img.shields.io/badge/License-MIT-lightgrey.svg)
+[![GitHub](https://img.shields.io/twitter/follow/axsaucedo.svg?label=Follow)](https://twitter.com/AxSaucedo/)
+
 # Flawed Machine Learning Security
 
 This Repo contains a set of resources relevant to the talk "Secure Machine Learning at Scale with MLSecOps", and provides a set of examples to showcase practical common security flaws throughout the multiple phases of the machine learning lifecycle.
