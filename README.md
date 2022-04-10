@@ -4,9 +4,44 @@
 ![GitHub](https://img.shields.io/badge/License-MIT-lightgrey.svg)
 [![GitHub](https://img.shields.io/twitter/follow/axsaucedo.svg?label=Follow)](https://twitter.com/AxSaucedo/)
 
-# Flawed Machine Learning Security
+
+<table>
+<tr>
+<td width="60%">
+<h1>Flawed Machine Learning Security</h1>
+</td>
+<td>
+<a href="https://youtu.be/dKjCWfuvYxQ?t=147"><img src="images/bosstown.gif"></a> <br> (AKA Exploring Secure ML)
+</td>
+</td>
+</table>
+
+
+## About this repo
 
 This Repo contains a set of resources relevant to the talk "Secure Machine Learning at Scale with MLSecOps", and provides a set of examples to showcase practical common security flaws throughout the multiple phases of the machine learning lifecycle.
+
+
+## Quick links to sections in this page [TODO]
+
+| | | |
+|-|-|-|
+|[🔍 High Level Frameworks & Principles](#high-level-frameworks-and-principles) |[🔏 Processes & Checklists](#processes-and-checklists) | [🔨 Interactive & Practical Tools](#interactive-and-practical-tools)|
+|[📜 Industry standards initiatives](#industry-standards-initiatives)|[📚 Online Courses](#online-courses-and-learning-resources)|[🤖 Research and Industry Newsletters](#research-and-industry-newsletters)|
+|[⚔ Regulation and Policy](#regulation-and-policy)|||
+
+## Other relevant resources
+
+<table>
+  <tr>
+    <td width="30%">
+         You can join the <a href="https://ethical.institute/mle.html">Machine Learning Engineer</a> newsletter. You will receive updates on open source frameworks, tutorials and articles curated by machine learning professionals.
+    </td>
+    <td width="70%">
+        <a href="https://ethical.institute/mle.html"><img src="images/mleng.png"></a>
+    </td>
+  </tr>
+</table>
 
 ## Setup
 
