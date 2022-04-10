@@ -365,10 +365,11 @@ model_safe.predict(X[:1])
 
 
 ```python
-import types, os
+import types, os, base64
 
 def __reduce__(self):
-    cmd = "env > pwnd.txt" # E.g. base64.b64decode("ZW52ID4gcHduZC50eHQ=")
+    # This is basically cmd = "env > pwnd.txt"
+    cmd = base64.b64decode("ZW52ID4gcHduZC50eHQ=").decode() 
     return os.system, (cmd,)
 ```
 
@@ -482,7 +483,12 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
     USER=alejandro
 
 
-#### Cleaning Deployed Services
+#### Cleaning Artifacts Section
+
+
+```python
+!rm pwnd.txt
+```
 
 
 ```python
@@ -692,6 +698,13 @@ build-backend = "poetry.core.masonry.api"
 
 We use `bandit` for python AST code scans, which we can make sure to extend as well to some of the code that is being used in Jupyter notebooks where relevant.
 
+Examples of key areas that we would be interested to identify:
+
+* Ensuring secrets/keys are not being committed to the repo
+* Ensuring bad practice can be avoided where clear potential risk
+* Identifying and pointing potentially risky code paths
+* Providing suggestions where best practices can be provided
+
 
 ```python
 !pip install bandit
@@ -764,6 +777,59 @@ Ensuring dependencies are up to date continuously is important. There are older 
 ```python
 !piprot requirements-freeze.txt
 ```
+
+    attrs (21.4.0) is up to date
+    bcrypt (3.1.7) is 925 days out of date. Latest is 3.2.0
+    certifi (2021.10.8) is up to date
+    cffi (1.15.0) is up to date
+    charset-normalizer (2.0.12) is up to date
+    click (8.0.4) is 41 days out of date. Latest is 8.1.2
+    cryptography (3.4.8) is 203 days out of date. Latest is 36.0.2
+    docker-compose (1.25.0) is 538 days out of date. Latest is 1.29.2
+    dockerpty (0.4.1) is up to date
+    docopt (0.6.2) is up to date
+    Flask (1.1.2) is 726 days out of date. Latest is 2.1.1
+    Flask-Cors (3.0.10) is up to date
+    Flask-OpenTracing (1.1.0) is up to date
+    flatbuffers (1.12) is 423 days out of date. Latest is 2.0
+    grpcio (1.44.0) is 34 days out of date. Latest is 1.45.0
+    grpcio-opentracing (1.1.4) is up to date
+    grpcio-reflection (1.34.1) is 434 days out of date. Latest is 1.45.0
+    gunicorn (20.1.0) is up to date
+    idna (3.3) is up to date
+    importlib-metadata (4.11.3) is up to date
+    itsdangerous (1.1.0) is 1244 days out of date. Latest is 2.1.2
+    jaeger-client (4.4.0) is 250 days out of date. Latest is 4.8.0
+    Jinja2 (2.11.3) is 418 days out of date. Latest is 3.1.1
+    joblib (0.16.0) is 462 days out of date. Latest is 1.1.0
+    jsonschema (3.2.0) is 785 days out of date. Latest is 4.4.0
+    MarkupSafe (1.1.1) is 1115 days out of date. Latest is 2.1.1
+    numpy (1.21.5) is 77 days out of date. Latest is 1.22.3
+    opentracing (2.4.0) is up to date
+    paramiko (2.7.1) is 829 days out of date. Latest is 2.10.3
+    pipdeptree (2.2.1) is up to date
+    prometheus-client (0.8.0) is 683 days out of date. Latest is 0.14.1
+    protobuf (3.20.0) is up to date
+    pycparser (2.21) is up to date
+    PyNaCl (1.3.0) is 1199 days out of date. Latest is 1.5.0
+    pyrsistent (0.18.1) is up to date
+    PyYAML (5.4.1) is 265 days out of date. Latest is 6.0
+    requests (2.27.1) is up to date
+    scikit-learn (0.24.2) is 241 days out of date. Latest is 1.0.2
+    scipy (1.7.3) is 68 days out of date. Latest is 1.8.0
+    seldon-core (1.13.1) is up to date
+    six (1.16.0) is up to date
+    texttable (1.6.2) is 545 days out of date. Latest is 1.6.4
+    threadloop (1.0.2) is up to date
+    threadpoolctl (3.1.0) is up to date
+    thrift (0.16.0) is up to date
+    tornado (6.1) is up to date
+    typing_extensions (4.1.1) is up to date
+    urllib3 (1.26.5) is 293 days out of date. Latest is 1.26.9
+    Werkzeug (2.1.1) is up to date
+    zipp (3.8.0) is up to date
+    Your requirements are 11798 days out of date
+
 
 
 ```bash
