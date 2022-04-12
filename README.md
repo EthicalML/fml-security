@@ -30,7 +30,7 @@ Below are links to resources related to the talk, as well as references and rele
 
 | | | |
 |-|-|-|
-|[🔍 Presentaiton Slides](https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🔏 PyData Berlin Talk Link](https://2022.pycon.de/program/APTWQS/) | [🔨 Talk Video (Coming Soon)](#)|
+|[📄 Presentaiton Slides](https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🗣️ PyData Berlin Talk Link](https://2022.pycon.de/program/APTWQS/) | [📽️ Talk Video (Coming Soon)](#)|
 
 
 ### Navigating the Repo Examples
@@ -49,8 +49,8 @@ Below is the direct links to each of the headers that map to the main key sectio
 
 | | | |
 |-|-|-|
-|[📜 Machine Learning Ecosystem List](https://github.com/EthicalML/awesome-production-machine-learning/)|[📚 The State of ML Operations](https://www.youtube.com/watch?v=Ynb6X0KZKxY)|[⚔ Prod ML Monitoring](https://www.youtube.com/watch?v=QcevzK9ZuDg&t=3s)|||
-|[📜 Accelerating ML Inference at Scale](https://www.youtube.com/watch?v=T0pPn5KTxFE&t=4s)|[📚 Alibi Detect Adversarial Detection](https://docs.seldon.io/projects/alibi-detect/en/latest/examples/alibi_detect_deploy.html)|[⚔ Practical AI Ethics](https://www.youtube.com/watch?v=57YpXjcj0Ho&t=63s)|||
+|[📜 Machine Learning Ecosystem List](https://github.com/EthicalML/awesome-production-machine-learning/)|[📚 The State of ML Operations](https://www.youtube.com/watch?v=Ynb6X0KZKxY)|[📈 Prod ML Monitoring](https://www.youtube.com/watch?v=QcevzK9ZuDg&t=3s)|||
+|[🌀 Accelerating ML Inference at Scale](https://www.youtube.com/watch?v=T0pPn5KTxFE&t=4s)|[🕵️‍♀️ Alibi Detect Adversarial Detection](https://docs.seldon.io/projects/alibi-detect/en/latest/examples/alibi_detect_deploy.html)|[👓 Practical AI Ethics](https://www.youtube.com/watch?v=57YpXjcj0Ho&t=63s)|||
 
 ## Other relevant resources
 
