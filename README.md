@@ -37,6 +37,14 @@ Below are links to resources related to the talk, as well as references and rele
 
 Below is the direct links to each of the headers that map to the main key sections of the presentation slides.
 
+* [Train Model and Deploy Artifact](#1---train-model-and-deploy-artifact)
+* [Load Pickle and Inject Malicious Code](#2---load-pickle-and-inject-malicious-code)
+* [Adversarial Detection](#3---adversarial-detection)
+* [Dependency Vulnerability Scans](#4---dependency-vulnerability-scans)
+* [Code Scans](#5---code-scans)
+* [Container Scans](#6---container-scan)
+
+
 ### Links to Other Talks and Relevant Resources
 
 | | | |
