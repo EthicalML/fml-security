@@ -43,6 +43,7 @@ Below is the direct links to each of the headers that map to the main key sectio
 * [Dependency Vulnerability Scans](#4---dependency-vulnerability-scans)
 * [Code Scans](#5---code-scans)
 * [Container Scans](#6---container-scan)
+* [Honourable Mentions](#honourable-mentions)
 
 
 ### Links to Other Talks and Relevant Resources
@@ -82,9 +83,12 @@ In order to set up the environment correctly, you will have to follow the [SETUP
 
 ## 1 - Train Model and Deploy Artifact
 
+In this section we will train a machine learning model and deploy it with Seldon Core. We will overlook a lot of the details, but if you want to learn the ins-and-outs there are a set of talks referenced in the intro section above.
+
 ![](images/ml-deploy.jpg)
 
 #### Install requirements for model
+
 
 
 ```python
