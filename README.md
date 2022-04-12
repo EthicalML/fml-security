@@ -495,6 +495,10 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
     seldondeployment.machinelearning.seldon.io "model-unsafe" deleted
 
 
+## Adversarial Detection
+
+Using Alibi Detect end to end adversarial detection example https://docs.seldon.io/projects/alibi-detect/en/latest/examples/alibi_detect_deploy.html
+
 ## Model Server
 
 #### Revisiting our requirements

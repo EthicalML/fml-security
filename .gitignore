@@ -3,3 +3,7 @@ pwnd.txt
 .ipynb_checkpoints/
 .mypy_cache/
 owasp/
+resnet56.h5
+adversarial/
+resnet3h5
+resnet32.h5
