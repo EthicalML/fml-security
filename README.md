@@ -408,7 +408,7 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
 
 Using Alibi Detect end to end adversarial detection example https://docs.seldon.io/projects/alibi-detect/en/latest/examples/alibi_detect_deploy.html
 
-## Model Server
+## 4 - Dependency Vulnerability Scans
 
 #### Revisiting our requirements
 
@@ -537,8 +537,6 @@ build-backend = "poetry.core.masonry.api"
     docs = ["furo", "sphinx", "zope.interface", "sphinx-notfound-page"]
     tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
 
-
-## 4 - Dependency Vulnerability Scans
 
 #### Scanning Python Versions against CVE Database
 
