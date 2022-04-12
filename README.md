@@ -22,7 +22,9 @@
 This Repo contains a set of resources relevant to the talk "Secure Machine Learning at Scale with MLSecOps", and provides a set of examples to showcase practical common security flaws throughout the multiple phases of the machine learning lifecycle.
 
 
-## Links to Talk Resources
+## Relevant Links
+
+### Link to Talk Resources
 
 Below are links to resources related to the talk, as well as references and relevant areas in machine learning security.
 
@@ -30,6 +32,10 @@ Below are links to resources related to the talk, as well as references and rele
 |-|-|-|
 |[🔍 Presentaiton Slides](https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🔏 PyData Berlin Talk Link](https://2022.pycon.de/program/APTWQS/) | [🔨 Talk Video (Coming Soon)](#)|
 
+
+### Navigating the Repo Examples
+
+Below is the direct links to each of the headers that map to the main key sections of the presentation slides.
 
 ### Links to Other Talks and Relevant Resources
 
@@ -66,7 +72,7 @@ The notebook was created with the following requirements:
 
 In order to set up the environment correctly, you will have to follow the [SETUP.ipynb](SETUP.ipynb) Jupyter notebook.
 
-## 1 - Train Model & Deploy Artifact
+## 1 - Train Model and Deploy Artifact
 
 #### Install requirements for model
 
