@@ -53,139 +53,20 @@ Below are links to resources related to the talk, as well as references and rele
 
 ## Requirements
 
-Requirements on CLIs
-* kubectl
-* istioctl
-* mc (minio client)
+The notebook was created with the following requirements:
+
+* kubectl - v1.22.5
+* istioctl v1.11.4
+* helm - v.3.7.0
+* mc (minio client) - RELEASE.2020-04-17T08-55-48Z
 * Kubernetes > 1.18
 * Python 3.7
 
-### Setup Kubernetes Cluster
+## Setting up environment
 
-#### Install and setup Istio
+In order to set up the environment correctly, you will have to follow the [SETUP.ipynb](SETUP.ipynb) Jupyter notebook.
 
-
-```python
-!istioctl install -y
-```
-
-    [32m✔[0m Istio core installed                                                          
-    [32m✔[0m Istiod installed                                                              
-    [32m✔[0m Ingress gateways installed                                                    
-    [32m✔[0m Installation complete                                                         
-    Thank you for installing Istio 1.11.  Please take a few minutes to tell us about your install/upgrade experience!  https://forms.gle/kWULBRjUv7hHci7T6
-
-
-
-```bash
-%%bash
-kubectl apply -n istio-system -f - << END
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: seldon-gateway
-spec:
-  selector:
-    istio: ingressgateway # use istio default controller
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "*"
-END
-```
-
-    gateway.networking.istio.io/seldon-gateway created
-
-
-#### Setup Seldon Core
-
-
-```bash
-%%bash
-kubectl create ns seldon-system
-helm upgrade --install \
-    seldon-core seldon-core-operator \
-    --repo https://storage.googleapis.com/seldon-charts  \
-    --set usageMetrics.enabled=true --namespace seldon-system \
-    --set istio.enabled="true" --set istio.gateway="seldon-gateway.istio-system.svc.cluster.local" \
-    --version 1.13.1
-```
-
-    Release "seldon-core" has been upgraded. Happy Helming!
-    NAME: seldon-core
-    LAST DEPLOYED: Mon Apr 11 21:04:42 2022
-    NAMESPACE: seldon-system
-    STATUS: deployed
-    REVISION: 2
-    TEST SUITE: None
-
-
-    Error from server (AlreadyExists): namespaces "seldon-system" already exists
-
-
-#### Setup & configure MinIO
-
-
-```bash
-%%bash
-kubectl create ns minio-system
-helm repo add minio https://helm.min.io/
-helm upgrade --install minio minio/minio \
-    --set accessKey=minioadmin \
-    --set secretKey=minioadmin \
-    --namespace minio-system
-```
-
-    Process is interrupted.
-
-
-Once minio is runnning you need to open another terminal and run:
-```
-kubectl port-forward -n minio-system svc/minio 9000:9000
-```
-
-
-```python
-!mc config host add minio-seldon http://localhost:9000 minioadmin minioadmin
-```
-
-    [m[32mAdded `minio-seldon` successfully.[0m
-    [0m
-
-
-```python
-!mc mb minio-seldon/fml-artifacts/ -p
-```
-
-    [m[32;1mBucket created successfully `minio-seldon/fml-artifacts/`.[0m
-    [0m
-
-
-```bash
-%%bash
-kubectl apply -f - << END
-apiVersion: v1
-kind: Secret
-metadata:
-  name: seldon-init-container-secret
-type: Opaque
-stringData:
-  RCLONE_CONFIG_S3_TYPE: s3
-  RCLONE_CONFIG_S3_PROVIDER: minio
-  RCLONE_CONFIG_S3_ACCESS_KEY_ID: minioadmin
-  RCLONE_CONFIG_S3_SECRET_ACCESS_KEY: minioadmin
-  RCLONE_CONFIG_S3_ENDPOINT: http://minio.minio-system.svc.cluster.local:9000
-  RCLONE_CONFIG_S3_ENV_AUTH: "false"
-END
-```
-
-    secret/seldon-init-container-secret created
-
-
-## Model Training Artifacts
+## 1 - Train Model & Deploy Artifact
 
 #### Install requirements for model
 
@@ -341,7 +222,7 @@ requests.post(url, json={"data": {"ndarray": [[1,2,3,4]]}}).json()
 
 
 
-## Load Pickle and Inject Malicious Code
+## 2 - Load Pickle and Inject Malicious Code
 
 
 ```python
@@ -501,7 +382,7 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
     seldondeployment.machinelearning.seldon.io "model-unsafe" deleted
 
 
-## Adversarial Detection
+## 3 - Adversarial Detection
 
 Using Alibi Detect end to end adversarial detection example https://docs.seldon.io/projects/alibi-detect/en/latest/examples/alibi_detect_deploy.html
 
@@ -635,7 +516,7 @@ build-backend = "poetry.core.masonry.api"
     tests = ["coverage[toml] (>=5.0.2)", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "mypy", "pytest-mypy-plugins", "zope.interface", "cloudpickle"]
 
 
-### Dependency Vulnerability Scans
+## 4 - Dependency Vulnerability Scans
 
 #### Scanning Python Versions against CVE Database
 
@@ -693,57 +574,7 @@ build-backend = "poetry.core.masonry.api"
     +==============================================================================+[0m
 
 
-#### Code Scans for Security
-
-We use `bandit` for python AST code scans, which we can make sure to extend as well to some of the code that is being used in Jupyter notebooks where relevant.
-
-Examples of key areas that we would be interested to identify:
-
-* Ensuring secrets/keys are not being committed to the repo
-* Ensuring bad practice can be avoided where clear potential risk
-* Identifying and pointing potentially risky code paths
-* Providing suggestions where best practices can be provided
-
-
-```python
-!pip install bandit
-```
-
-
-```python
-!bandit .
-```
-
-    [main]	INFO	profile include tests: None
-    [main]	INFO	profile exclude tests: None
-    [main]	INFO	cli include tests: None
-    [main]	INFO	cli exclude tests: None
-    [main]	INFO	running on Python 3.7.12
-    [manager]	WARNING	Skipping directory (.), use -r flag to scan contents
-    [95mRun started:2022-04-10 17:04:48.838869[0m
-    [95m
-    Test results:[0m
-    	No issues identified.
-    [95m
-    Code scanned:[0m
-    	Total lines of code: 0
-    	Total lines skipped (#nosec): 0
-    [95m
-    Run metrics:[0m
-    	Total issues (by severity):
-    		Undefined: 0
-    		Low: 0
-    		Medium: 0
-    		High: 0
-    	Total issues (by confidence):
-    		Undefined: 0
-    		Low: 0
-    		Medium: 0
-    		High: 0
-    [95mFiles skipped (0):[0m
-
-
-#### Dependency Updating
+#### Identifying Old Dependencies
 
 Ensuring dependencies are up to date continuously is important. There are older dependencies like `piprot` but also good tools like `dependeabot`.
 
@@ -901,7 +732,57 @@ docker run --rm \
     "Project","ScanDate","DependencyName","DependencyPath","Description","License","Md5","Sha1","Identifiers","CPE","CVE","CWE","Vulnerability","Source","CVSSv2_Severity","CVSSv2_Score","CVSSv2","CVSSv3_BaseSeverity","CVSSv3_BaseScore","CVSSv3","CPE Confidence","Evidence Count"
 
 
-## Container Scan
+## 5 - Code Scans
+
+We use `bandit` for python AST code scans, which we can make sure to extend as well to some of the code that is being used in Jupyter notebooks where relevant.
+
+Examples of key areas that we would be interested to identify:
+
+* Ensuring secrets/keys are not being committed to the repo
+* Ensuring bad practice can be avoided where clear potential risk
+* Identifying and pointing potentially risky code paths
+* Providing suggestions where best practices can be provided
+
+
+```python
+!pip install bandit
+```
+
+
+```python
+!bandit .
+```
+
+    [main]	INFO	profile include tests: None
+    [main]	INFO	profile exclude tests: None
+    [main]	INFO	cli include tests: None
+    [main]	INFO	cli exclude tests: None
+    [main]	INFO	running on Python 3.7.12
+    [manager]	WARNING	Skipping directory (.), use -r flag to scan contents
+    [95mRun started:2022-04-10 17:04:48.838869[0m
+    [95m
+    Test results:[0m
+    	No issues identified.
+    [95m
+    Code scanned:[0m
+    	Total lines of code: 0
+    	Total lines skipped (#nosec): 0
+    [95m
+    Run metrics:[0m
+    	Total issues (by severity):
+    		Undefined: 0
+    		Low: 0
+    		Medium: 0
+    		High: 0
+    	Total issues (by confidence):
+    		Undefined: 0
+    		Low: 0
+    		Medium: 0
+    		High: 0
+    [95mFiles skipped (0):[0m
+
+
+## 6 - Container Scan
 
 
 ```python
