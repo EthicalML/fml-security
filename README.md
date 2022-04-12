@@ -28,7 +28,7 @@ Below are links to resources related to the talk, as well as references and rele
 
 | | | |
 |-|-|-|
-|[🔍 Presentaiton Slides](#https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🔏 PyData Berlin Talk Link](#https://2022.pycon.de/program/APTWQS/) | [🔨 Talk Video (Coming Soon)](#)|
+|[🔍 Presentaiton Slides](https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🔏 PyData Berlin Talk Link](https://2022.pycon.de/program/APTWQS/) | [🔨 Talk Video (Coming Soon)](#)|
 
 
 ### Links to Other Talks and Relevant Resources
@@ -289,7 +289,7 @@ with open("fml-artifacts/safe/model.joblib", "rb") as f: print(f.readlines())
 !mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
 ```
 
-    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 85.54 KiB/s 0s[0m[0m
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 63.43 KiB/s 0s[0m[0m
 
 
 ```bash
@@ -310,7 +310,7 @@ spec:
 END
 ```
 
-    seldondeployment.machinelearning.seldon.io/model-safe created
+    seldondeployment.machinelearning.seldon.io/model-safe unchanged
 
 
 
@@ -318,7 +318,7 @@ END
 !kubectl get pods | grep model-safe
 ```
 
-    model-safe-default-0-classifier-68f495d845-xwrkm     2/2     Running   0          6m17s
+    model-safe-default-0-classifier-68f495d845-xwrkm     2/2     Running   0          11h
 
 
 
@@ -409,7 +409,7 @@ with open("fml-artifacts/unsafe/model.joblib", "rb") as f: print(f.readlines())
 !mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
 ```
 
-    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 126.77 KiB/s 0s[0m[0m
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 103.36 KiB/s 0s[0m[0m
 
 
 ```bash
@@ -430,7 +430,7 @@ spec:
 END
 ```
 
-    seldondeployment.machinelearning.seldon.io/model-unsafe created
+    seldondeployment.machinelearning.seldon.io/model-unsafe unchanged
 
 
 
@@ -439,8 +439,8 @@ END
 ```
 
     NAME                                                 READY   STATUS    RESTARTS   AGE
-    model-safe-default-0-classifier-68f495d845-xwrkm     2/2     Running   0          6m35s
-    model-unsafe-default-0-classifier-85969ff86c-rtwt5   2/2     Running   0          39s
+    model-safe-default-0-classifier-68f495d845-xwrkm     2/2     Running   0          11h
+    model-unsafe-default-0-classifier-85969ff86c-rtwt5   2/2     Running   0          11h
 
 
 
