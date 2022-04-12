@@ -82,6 +82,8 @@ In order to set up the environment correctly, you will have to follow the [SETUP
 
 ## 1 - Train Model and Deploy Artifact
 
+![](images/ml-deploy.jpg)
+
 #### Install requirements for model
 
 
@@ -237,6 +239,8 @@ requests.post(url, json={"data": {"ndarray": [[1,2,3,4]]}}).json()
 
 
 ## 2 - Load Pickle and Inject Malicious Code
+
+![](images/ml-artifacts.jpg)
 
 
 ```python
@@ -748,6 +752,8 @@ docker run --rm \
 
 ## 5 - Code Scans
 
+![](images/ml-code.jpg)
+
 We use `bandit` for python AST code scans, which we can make sure to extend as well to some of the code that is being used in Jupyter notebooks where relevant.
 
 Examples of key areas that we would be interested to identify:
@@ -818,6 +824,12 @@ Examples of key areas that we would be interested to identify:
     Total: 0 (CRITICAL: 0)
     
 
+
+## Honourable Mentions
+
+![](images/ml-mentions.jpg)
+
+Above are a set of honorable mentions that are not covered in this notebook, but that would still be relevant to check out. You can follow the resources at the top for other links to relevant areas for deeper dives.
 
 
 ```python
