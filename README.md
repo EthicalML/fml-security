@@ -30,7 +30,7 @@ Below are links to resources related to the talk, as well as references and rele
 
 | | | |
 |-|-|-|
-|[📄 Presentaiton Slides](https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🗣️ PyData Berlin Talk Link](https://2022.pycon.de/program/APTWQS/) | [📽️ Talk Video (Coming Soon)](#)|
+|[📄 Presentaiton Slides](https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🗣️ Talk Link (Coming Soon)](#) | [📽️ Talk Video (Coming Soon)](#)|
 
 
 ### Navigating the Repo Examples
