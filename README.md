@@ -833,6 +833,10 @@ Examples of key areas that we would be interested to identify:
 
 Above are a set of honorable mentions that are not covered in this notebook, but that would still be relevant to check out. You can follow the resources at the top for other links to relevant areas for deeper dives.
 
+#### Exploring the OWASP Top 10 for ML
+
+![](images/omlsp.jpg)
+
 
 ```python
 
