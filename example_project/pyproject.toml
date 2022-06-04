@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "Example Project"
+version = "0.1.0"
+description = "A short description of the project."
+authors = ["MyGithubUsername"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+mlserver = "1.1.0.dev6"
+fastapi = "^0.78"
+
+[tool.poetry.dev-dependencies]
+Sphinx = "3.2.1"
+coverage = "4.5.4"
+flake8 = "3.9.0"
+
+safety = "1.10.3"
+piprot = "0.9.11"
+bandit = "1.7.4"
+
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

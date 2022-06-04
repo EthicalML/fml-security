@@ -99,7 +99,7 @@ numpy >= 1.8.2
 joblib == 0.16.0
 ```
 
-    Writing requirements.txt
+    Overwriting requirements.txt
 
 
 
@@ -190,7 +190,7 @@ with open("fml-artifacts/safe/model.joblib", "rb") as f: print(f.readlines())
 !mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
 ```
 
-    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 63.43 KiB/s 0s[0m[0m
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 54.76 KiB/s 0s[0m[0m[m[32;1m
 
 
 ```bash
@@ -211,7 +211,7 @@ spec:
 END
 ```
 
-    seldondeployment.machinelearning.seldon.io/model-safe unchanged
+    seldondeployment.machinelearning.seldon.io/model-safe created
 
 
 
@@ -219,7 +219,7 @@ END
 !kubectl get pods | grep model-safe
 ```
 
-    model-safe-default-0-classifier-68f495d845-xwrkm     2/2     Running   0          11h
+    model-safe-default-0-classifier-554dcc575b-8j2lf     2/2     Running   0          91m
 
 
 
@@ -238,7 +238,7 @@ requests.post(url, json={"data": {"ndarray": [[1,2,3,4]]}}).json()
       'ndarray': [[0.0006985194531162835,
         0.00366803903943666,
         0.995633441507447]]},
-     'meta': {'requestPath': {'classifier': 'seldonio/sklearnserver:1.13.1'}}}
+     'meta': {'requestPath': {'classifier': 'seldonio/sklearnserver:1.14.0-dev'}}}
 
 
 
@@ -312,7 +312,7 @@ with open("fml-artifacts/unsafe/model.joblib", "rb") as f: print(f.readlines())
 !mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
 ```
 
-    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 103.36 KiB/s 0s[0m[0m
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 110.68 KiB/s 0s[0m[0m
 
 
 ```bash
@@ -342,8 +342,8 @@ END
 ```
 
     NAME                                                 READY   STATUS    RESTARTS   AGE
-    model-safe-default-0-classifier-68f495d845-xwrkm     2/2     Running   0          11h
-    model-unsafe-default-0-classifier-85969ff86c-rtwt5   2/2     Running   0          11h
+    model-safe-default-0-classifier-554dcc575b-8j2lf     2/2     Running   0          96m
+    model-unsafe-default-0-classifier-75679bbd57-bqcdj   2/2     Running   0          89m
 
 
 
@@ -355,20 +355,17 @@ kubectl exec $UNSAFE_POD -c classifier -- head -5 pwnd.txt
 
     SERVICE_TYPE=MODEL
     LC_ALL=C.UTF-8
+    SKLEARN_DEFAULT_PORT_8000_TCP_PROTO=tcp
     MODEL_UNSAFE_DEFAULT_SERVICE_PORT_GRPC=5001
-    MODEL_SAFE_DEFAULT_PORT_5001_TCP_PROTO=tcp
-    MODEL_UNSAFE_DEFAULT_SERVICE_PORT_HTTP=8000
+    SKLEARN_DEFAULT_SERVICE_HOST=10.100.66.186
 
 
 #### Now reload the insecure pickle
 
 
 ```python
-!ls pwnd.txt
+!rm pwnd.txt
 ```
-
-    ls: cannot access 'pwnd.txt': No such file or directory
-
 
 
 ```python
@@ -382,8 +379,8 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
 !head -4 pwnd.txt
 ```
 
-    CONDA_PROMPT_MODIFIER=(base) 
-    TMUX=/tmp/tmux-1000/default,98,0
+    CONDA_PROMPT_MODIFIER=(fml-security) 
+    TMUX=/tmp/tmux-1000/default,94,0
     PYSPARK_DRIVER_PYTHON=jupyter
     USER=alejandro
 
@@ -408,7 +405,59 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
 
 Using Alibi Detect end to end adversarial detection example https://docs.seldon.io/projects/alibi-detect/en/latest/examples/alibi_detect_deploy.html
 
-## 4 - Dependency Vulnerability Scans
+## 4 - Code Scans
+
+![](images/ml-code.jpg)
+
+We use `bandit` for python AST code scans, which we can make sure to extend as well to some of the code that is being used in Jupyter notebooks where relevant.
+
+Examples of key areas that we would be interested to identify:
+
+* Ensuring secrets/keys are not being committed to the repo
+* Ensuring bad practice can be avoided where clear potential risk
+* Identifying and pointing potentially risky code paths
+* Providing suggestions where best practices can be provided
+
+
+```python
+!pip install bandit
+```
+
+
+```python
+!bandit .
+```
+
+    [main]	INFO	profile include tests: None
+    [main]	INFO	profile exclude tests: None
+    [main]	INFO	cli include tests: None
+    [main]	INFO	cli exclude tests: None
+    [main]	INFO	running on Python 3.7.12
+    [manager]	WARNING	Skipping directory (.), use -r flag to scan contents
+    [95mRun started:2022-04-10 17:04:48.838869[0m
+    [95m
+    Test results:[0m
+    	No issues identified.
+    [95m
+    Code scanned:[0m
+    	Total lines of code: 0
+    	Total lines skipped (#nosec): 0
+    [95m
+    Run metrics:[0m
+    	Total issues (by severity):
+    		Undefined: 0
+    		Low: 0
+    		Medium: 0
+    		High: 0
+    	Total issues (by confidence):
+    		Undefined: 0
+    		Low: 0
+    		Medium: 0
+    		High: 0
+    [95mFiles skipped (0):[0m
+
+
+## 5 - Dependency Vulnerability Scans
 
 #### Revisiting our requirements
 
@@ -432,6 +481,197 @@ Using Alibi Detect end to end adversarial detection example https://docs.seldon.
 ```python
 !pipdeptree
 ```
+
+    Warning!!! Possibly conflicting dependencies found:
+    * docker-compose==1.25.0
+     - cached-property [required: >=1.2.0,<2, installed: ?]
+     - websocket-client [required: >=0.32.0,<1, installed: ?]
+     - docker [required: >=3.7.0,<5, installed: ?]
+     - PyYAML [required: >=3.10,<5, installed: 5.4.1]
+    ------------------------------------------------------------------------
+    bandit==1.7.4
+      - GitPython [required: >=1.0.1, installed: 3.1.27]
+        - gitdb [required: >=4.0.1,<5, installed: 4.0.9]
+          - smmap [required: >=3.0.1,<6, installed: 5.0.0]
+        - typing-extensions [required: >=3.7.4.3, installed: 4.1.1]
+      - PyYAML [required: >=5.3.1, installed: 5.4.1]
+      - stevedore [required: >=1.20.0, installed: 3.5.0]
+        - importlib-metadata [required: >=1.7.0, installed: 4.11.3]
+          - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+          - zipp [required: >=0.5, installed: 3.8.0]
+        - pbr [required: >=2.0.0,!=2.1.0, installed: 5.8.1]
+    docker-compose==1.25.0
+      - cached-property [required: >=1.2.0,<2, installed: ?]
+      - docker [required: >=3.7.0,<5, installed: ?]
+      - dockerpty [required: >=0.4.1,<1, installed: 0.4.1]
+        - six [required: >=1.3.0, installed: 1.16.0]
+      - docopt [required: >=0.6.1,<1, installed: 0.6.2]
+      - jsonschema [required: >=2.5.1,<4, installed: 3.2.0]
+        - attrs [required: >=17.4.0, installed: 21.4.0]
+        - importlib-metadata [required: Any, installed: 4.11.3]
+          - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+          - zipp [required: >=0.5, installed: 3.8.0]
+        - pyrsistent [required: >=0.14.0, installed: 0.18.1]
+        - setuptools [required: Any, installed: 62.0.0]
+        - six [required: >=1.11.0, installed: 1.16.0]
+      - PyYAML [required: >=3.10,<5, installed: 5.4.1]
+      - requests [required: >=2.20.0,<3, installed: 2.27.1]
+        - certifi [required: >=2017.4.17, installed: 2021.10.8]
+        - charset-normalizer [required: ~=2.0.0, installed: 2.0.12]
+        - idna [required: >=2.5,<4, installed: 3.3]
+        - urllib3 [required: >=1.21.1,<1.27, installed: 1.26.5]
+      - six [required: >=1.3.0,<2, installed: 1.16.0]
+      - texttable [required: >=0.9.0,<2, installed: 1.6.2]
+      - websocket-client [required: >=0.32.0,<1, installed: ?]
+    paramiko==2.7.1
+      - bcrypt [required: >=3.1.3, installed: 3.1.7]
+        - cffi [required: >=1.1, installed: 1.15.0]
+          - pycparser [required: Any, installed: 2.21]
+        - six [required: >=1.4.1, installed: 1.16.0]
+      - cryptography [required: >=2.5, installed: 3.4.8]
+        - cffi [required: >=1.12, installed: 1.15.0]
+          - pycparser [required: Any, installed: 2.21]
+      - pynacl [required: >=1.0.1, installed: 1.3.0]
+        - cffi [required: >=1.4.1, installed: 1.15.0]
+          - pycparser [required: Any, installed: 2.21]
+        - six [required: Any, installed: 1.16.0]
+    pipdeptree==2.2.1
+      - pip [required: >=6.0.0, installed: 22.0.4]
+    piprot==0.9.11
+      - requests [required: Any, installed: 2.27.1]
+        - certifi [required: >=2017.4.17, installed: 2021.10.8]
+        - charset-normalizer [required: ~=2.0.0, installed: 2.0.12]
+        - idna [required: >=2.5,<4, installed: 3.3]
+        - urllib3 [required: >=1.21.1,<1.27, installed: 1.26.5]
+      - requests-futures [required: Any, installed: 1.0.0]
+        - requests [required: >=1.2.0, installed: 2.27.1]
+          - certifi [required: >=2017.4.17, installed: 2021.10.8]
+          - charset-normalizer [required: ~=2.0.0, installed: 2.0.12]
+          - idna [required: >=2.5,<4, installed: 3.3]
+          - urllib3 [required: >=1.21.1,<1.27, installed: 1.26.5]
+      - six [required: Any, installed: 1.16.0]
+    pytest==5.4.3
+      - attrs [required: >=17.4.0, installed: 21.4.0]
+      - importlib-metadata [required: >=0.12, installed: 4.11.3]
+        - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+        - zipp [required: >=0.5, installed: 3.8.0]
+      - more-itertools [required: >=4.0.0, installed: 8.12.0]
+      - packaging [required: Any, installed: 21.3]
+        - pyparsing [required: >=2.0.2,!=3.0.5, installed: 3.0.8]
+      - pluggy [required: >=0.12,<1.0, installed: 0.13.1]
+        - importlib-metadata [required: >=0.12, installed: 4.11.3]
+          - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+          - zipp [required: >=0.5, installed: 3.8.0]
+      - py [required: >=1.5.0, installed: 1.11.0]
+      - wcwidth [required: Any, installed: 0.2.5]
+    safety==1.10.3
+      - Click [required: >=6.0, installed: 8.0.4]
+        - importlib-metadata [required: Any, installed: 4.11.3]
+          - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+          - zipp [required: >=0.5, installed: 3.8.0]
+      - dparse [required: >=0.5.1, installed: 0.5.1]
+        - packaging [required: Any, installed: 21.3]
+          - pyparsing [required: >=2.0.2,!=3.0.5, installed: 3.0.8]
+        - pyyaml [required: Any, installed: 5.4.1]
+        - toml [required: Any, installed: 0.10.2]
+      - packaging [required: Any, installed: 21.3]
+        - pyparsing [required: >=2.0.2,!=3.0.5, installed: 3.0.8]
+      - requests [required: Any, installed: 2.27.1]
+        - certifi [required: >=2017.4.17, installed: 2021.10.8]
+        - charset-normalizer [required: ~=2.0.0, installed: 2.0.12]
+        - idna [required: >=2.5,<4, installed: 3.3]
+        - urllib3 [required: >=1.21.1,<1.27, installed: 1.26.5]
+      - setuptools [required: Any, installed: 62.0.0]
+    scikit-learn==0.24.2
+      - joblib [required: >=0.11, installed: 0.16.0]
+      - numpy [required: >=1.13.3, installed: 1.21.5]
+      - scipy [required: >=0.19.1, installed: 1.7.3]
+        - numpy [required: >=1.16.5,<1.23.0, installed: 1.21.5]
+      - threadpoolctl [required: >=2.0.0, installed: 3.1.0]
+    seldon-core==1.13.1
+      - click [required: >=8.0.0a1,<8.1, installed: 8.0.4]
+        - importlib-metadata [required: Any, installed: 4.11.3]
+          - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+          - zipp [required: >=0.5, installed: 3.8.0]
+      - cryptography [required: >=3.4,<3.5, installed: 3.4.8]
+        - cffi [required: >=1.12, installed: 1.15.0]
+          - pycparser [required: Any, installed: 2.21]
+      - Flask [required: <2.0.0, installed: 1.1.2]
+        - click [required: >=5.1, installed: 8.0.4]
+          - importlib-metadata [required: Any, installed: 4.11.3]
+            - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+            - zipp [required: >=0.5, installed: 3.8.0]
+        - itsdangerous [required: >=0.24, installed: 1.1.0]
+        - Jinja2 [required: >=2.10.1, installed: 2.11.3]
+          - MarkupSafe [required: >=0.23, installed: 1.1.1]
+        - Werkzeug [required: >=0.15, installed: 2.1.1]
+      - Flask-cors [required: <4.0.0, installed: 3.0.10]
+        - Flask [required: >=0.9, installed: 1.1.2]
+          - click [required: >=5.1, installed: 8.0.4]
+            - importlib-metadata [required: Any, installed: 4.11.3]
+              - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+              - zipp [required: >=0.5, installed: 3.8.0]
+          - itsdangerous [required: >=0.24, installed: 1.1.0]
+          - Jinja2 [required: >=2.10.1, installed: 2.11.3]
+            - MarkupSafe [required: >=0.23, installed: 1.1.1]
+          - Werkzeug [required: >=0.15, installed: 2.1.1]
+        - Six [required: Any, installed: 1.16.0]
+      - Flask-OpenTracing [required: >=1.1.0,<1.2.0, installed: 1.1.0]
+        - Flask [required: Any, installed: 1.1.2]
+          - click [required: >=5.1, installed: 8.0.4]
+            - importlib-metadata [required: Any, installed: 4.11.3]
+              - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+              - zipp [required: >=0.5, installed: 3.8.0]
+          - itsdangerous [required: >=0.24, installed: 1.1.0]
+          - Jinja2 [required: >=2.10.1, installed: 2.11.3]
+            - MarkupSafe [required: >=0.23, installed: 1.1.1]
+          - Werkzeug [required: >=0.15, installed: 2.1.1]
+        - opentracing [required: >=2.0,<3, installed: 2.4.0]
+      - flatbuffers [required: <2.0.0, installed: 1.12]
+      - grpcio [required: <2.0.0, installed: 1.45.0]
+        - six [required: >=1.5.2, installed: 1.16.0]
+      - grpcio-opentracing [required: >=1.1.4,<1.2.0, installed: 1.1.4]
+        - grpcio [required: >=1.1.3,<2.0, installed: 1.45.0]
+          - six [required: >=1.5.2, installed: 1.16.0]
+        - opentracing [required: >=1.2.2, installed: 2.4.0]
+        - six [required: >=1.10, installed: 1.16.0]
+      - grpcio-reflection [required: <1.35.0, installed: 1.34.1]
+        - grpcio [required: >=1.34.1, installed: 1.45.0]
+          - six [required: >=1.5.2, installed: 1.16.0]
+        - protobuf [required: >=3.6.0, installed: 3.20.0]
+      - gunicorn [required: >=19.9.0,<20.2.0, installed: 20.1.0]
+        - setuptools [required: >=3.0, installed: 62.0.0]
+      - itsdangerous [required: ==1.1.0, installed: 1.1.0]
+      - jaeger-client [required: >=4.1.0,<4.5.0, installed: 4.4.0]
+        - opentracing [required: >=2.1,<3.0, installed: 2.4.0]
+        - threadloop [required: >=1,<2, installed: 1.0.2]
+          - tornado [required: Any, installed: 6.1]
+        - thrift [required: Any, installed: 0.16.0]
+          - six [required: >=1.7.2, installed: 1.16.0]
+        - tornado [required: >=4.3, installed: 6.1]
+      - jsonschema [required: <4.0.0, installed: 3.2.0]
+        - attrs [required: >=17.4.0, installed: 21.4.0]
+        - importlib-metadata [required: Any, installed: 4.11.3]
+          - typing-extensions [required: >=3.6.4, installed: 4.1.1]
+          - zipp [required: >=0.5, installed: 3.8.0]
+        - pyrsistent [required: >=0.14.0, installed: 0.18.1]
+        - setuptools [required: Any, installed: 62.0.0]
+        - six [required: >=1.11.0, installed: 1.16.0]
+      - markupsafe [required: ==1.1.1, installed: 1.1.1]
+      - numpy [required: <2.0.0, installed: 1.21.5]
+      - opentracing [required: >=2.2.0,<2.5.0, installed: 2.4.0]
+      - prometheus-client [required: >=0.7.1,<0.9.0, installed: 0.8.0]
+      - protobuf [required: <4.0.0, installed: 3.20.0]
+      - PyYAML [required: >=5.4,<5.5, installed: 5.4.1]
+      - requests [required: <3.0.0, installed: 2.27.1]
+        - certifi [required: >=2017.4.17, installed: 2021.10.8]
+        - charset-normalizer [required: ~=2.0.0, installed: 2.0.12]
+        - idna [required: >=2.5,<4, installed: 3.3]
+        - urllib3 [required: >=1.21.1,<1.27, installed: 1.26.5]
+      - setuptools [required: >=41.0.0, installed: 62.0.0]
+      - urllib3 [required: ==1.26.5, installed: 1.26.5]
+    wheel==0.37.1
+
 
 #### Identifying shortcomings of pip
 
@@ -463,6 +703,7 @@ We can actually create our makeshift environment freeze by using PIP directly.
 ```
 
     attrs==21.4.0
+    bandit==1.7.4
     bcrypt==3.1.7
     certifi==2021.10.8
     cffi==1.15.0
@@ -471,7 +712,6 @@ We can actually create our makeshift environment freeze by using PIP directly.
     cryptography==3.4.8
     docker-compose==1.25.0
     dockerpty==0.4.1
-    docopt==0.6.2
 
 
 #### Solving with Poetry
@@ -568,6 +808,14 @@ build-backend = "poetry.core.masonry.api"
 !safety check -r requirements-freeze.txt
 ```
 
+    [33mWarning: unpinned requirement 'grpcio' found in requirements-freeze.txt, unable to check.[0m
+    [33mWarning: unpinned requirement 'more-itertools' found in requirements-freeze.txt, unable to check.[0m
+    [33mWarning: unpinned requirement 'packaging' found in requirements-freeze.txt, unable to check.[0m
+    [33mWarning: unpinned requirement 'pluggy' found in requirements-freeze.txt, unable to check.[0m
+    [33mWarning: unpinned requirement 'py' found in requirements-freeze.txt, unable to check.[0m
+    [33mWarning: unpinned requirement 'pyparsing' found in requirements-freeze.txt, unable to check.[0m
+    [33mWarning: unpinned requirement 'pytest' found in requirements-freeze.txt, unable to check.[0m
+    [33mWarning: unpinned requirement 'wcwidth' found in requirements-freeze.txt, unable to check.[0m
     +==============================================================================+
     |                                                                              |
     |                               /$$$$$$            /$$                         |
@@ -584,7 +832,7 @@ build-backend = "poetry.core.masonry.api"
     |                                                                              |
     +==============================================================================+
     | REPORT                                                                       |
-    | checked 50 packages, using free DB (updated once a month)                    |
+    | checked 60 packages, using free DB (updated once a month)                    |
     +============================+===========+==========================+==========+
     | package                    | installed | affected                 | ID       |
     +============================+===========+==========================+==========+
@@ -752,58 +1000,6 @@ docker run --rm \
     "Project","ScanDate","DependencyName","DependencyPath","Description","License","Md5","Sha1","Identifiers","CPE","CVE","CWE","Vulnerability","Source","CVSSv2_Severity","CVSSv2_Score","CVSSv2","CVSSv3_BaseSeverity","CVSSv3_BaseScore","CVSSv3","CPE Confidence","Evidence Count"
 
 
-## 5 - Code Scans
-
-![](images/ml-code.jpg)
-
-We use `bandit` for python AST code scans, which we can make sure to extend as well to some of the code that is being used in Jupyter notebooks where relevant.
-
-Examples of key areas that we would be interested to identify:
-
-* Ensuring secrets/keys are not being committed to the repo
-* Ensuring bad practice can be avoided where clear potential risk
-* Identifying and pointing potentially risky code paths
-* Providing suggestions where best practices can be provided
-
-
-```python
-!pip install bandit
-```
-
-
-```python
-!bandit .
-```
-
-    [main]	INFO	profile include tests: None
-    [main]	INFO	profile exclude tests: None
-    [main]	INFO	cli include tests: None
-    [main]	INFO	cli exclude tests: None
-    [main]	INFO	running on Python 3.7.12
-    [manager]	WARNING	Skipping directory (.), use -r flag to scan contents
-    [95mRun started:2022-04-10 17:04:48.838869[0m
-    [95m
-    Test results:[0m
-    	No issues identified.
-    [95m
-    Code scanned:[0m
-    	Total lines of code: 0
-    	Total lines skipped (#nosec): 0
-    [95m
-    Run metrics:[0m
-    	Total issues (by severity):
-    		Undefined: 0
-    		Low: 0
-    		Medium: 0
-    		High: 0
-    	Total issues (by confidence):
-    		Undefined: 0
-    		Low: 0
-    		Medium: 0
-    		High: 0
-    [95mFiles skipped (0):[0m
-
-
 ## 6 - Container Scan
 
 
@@ -836,6 +1032,274 @@ Above are a set of honorable mentions that are not covered in this notebook, but
 #### Exploring the OWASP Top 10 for ML
 
 ![](images/omlsp.jpg)
+
+## Best Practices for ML Security
+
+
+```python
+%%writefile sml-security.yml
+default_context:
+    project_name: "Example Project"
+```
+
+    Writing sml-security.yml
+
+
+
+```python
+!cookiecutter https://github.com/EthicalML/sml-security --no-input --config-file sml-security.yml
+```
+
+
+```python
+!tree example_project/
+```
+
+    [01;34mexample_project/[00m
+    ├── Dockerfile
+    ├── LICENSE
+    ├── Makefile
+    ├── README.md
+    ├── [01;34mdocs[00m
+    │   ├── Makefile
+    │   ├── commands.rst
+    │   ├── conf.py
+    │   ├── [01;34mexamples[00m
+    │   │   └── model-settings.json
+    │   ├── getting-started.rst
+    │   ├── index.rst
+    │   └── make.bat
+    ├── [01;34mexample_project[00m
+    │   ├── __init__.py
+    │   ├── common.py
+    │   ├── runtime.py
+    │   └── version.py
+    ├── pyproject.toml
+    ├── requirements-dev.txt
+    ├── setup.py
+    └── [01;34mtests[00m
+        ├── conftest.py
+        └── test_runtime.py
+    
+    4 directories, 20 files
+
+
+
+```python
+!bat example_project/pyproject.toml
+```
+
+    [38;5;238m───────┬────────────────────────────────────────────────────────────────────────[0m
+           [38;5;238m│ [0mFile: [1mexample_project/pyproject.toml[0m
+    [38;5;238m───────┼────────────────────────────────────────────────────────────────────────[0m
+    [38;5;238m   1[0m   [38;5;238m│[0m [38;5;231m[[0m[38;5;149mtool[0m[38;5;231m.[0m[38;5;149mpoetry[0m[38;5;231m][0m
+    [38;5;238m   2[0m   [38;5;238m│[0m [38;5;203mname[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186mExample Project[0m[38;5;186m"[0m
+    [38;5;238m   3[0m   [38;5;238m│[0m [38;5;203mversion[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m0.1.0[0m[38;5;186m"[0m
+    [38;5;238m   4[0m   [38;5;238m│[0m [38;5;203mdescription[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186mA short description of the project.[0m[38;5;186m"[0m
+    [38;5;238m   5[0m   [38;5;238m│[0m [38;5;203mauthors[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;231m[[0m[38;5;186m"[0m[38;5;186mMyGithubUsername[0m[38;5;186m"[0m[38;5;231m][0m
+    [38;5;238m   6[0m   [38;5;238m│[0m [38;5;203mlicense[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186mMIT[0m[38;5;186m"[0m
+    [38;5;238m   7[0m   [38;5;238m│[0m 
+    [38;5;238m   8[0m   [38;5;238m│[0m [38;5;231m[[0m[38;5;149mtool[0m[38;5;231m.[0m[38;5;149mpoetry[0m[38;5;231m.[0m[38;5;149mdependencies[0m[38;5;231m][0m
+    [38;5;238m   9[0m   [38;5;238m│[0m [38;5;203mpython[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m^3.8[0m[38;5;186m"[0m
+    [38;5;238m  10[0m   [38;5;238m│[0m [38;5;203mmlserver[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m1.1.0.dev6[0m[38;5;186m"[0m
+    [38;5;238m  11[0m   [38;5;238m│[0m [38;5;203mfastapi[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m^0.78[0m[38;5;186m"[0m
+    [38;5;238m  12[0m   [38;5;238m│[0m 
+    [38;5;238m  13[0m   [38;5;238m│[0m [38;5;231m[[0m[38;5;149mtool[0m[38;5;231m.[0m[38;5;149mpoetry[0m[38;5;231m.[0m[38;5;149mdev-dependencies[0m[38;5;231m][0m
+    [38;5;238m  14[0m   [38;5;238m│[0m [38;5;203mSphinx[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m3.2.1[0m[38;5;186m"[0m
+    [38;5;238m  15[0m   [38;5;238m│[0m [38;5;203mcoverage[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m4.5.4[0m[38;5;186m"[0m
+    [38;5;238m  16[0m   [38;5;238m│[0m [38;5;203mflake8[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m3.9.0[0m[38;5;186m"[0m
+    [38;5;238m  17[0m   [38;5;238m│[0m 
+    [38;5;238m  18[0m   [38;5;238m│[0m [38;5;203msafety[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m1.10.3[0m[38;5;186m"[0m
+    [38;5;238m  19[0m   [38;5;238m│[0m [38;5;203mpiprot[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m0.9.11[0m[38;5;186m"[0m
+    [38;5;238m  20[0m   [38;5;238m│[0m [38;5;203mbandit[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186m1.7.4[0m[38;5;186m"[0m
+    [38;5;238m  21[0m   [38;5;238m│[0m 
+    [38;5;238m  22[0m   [38;5;238m│[0m 
+    [38;5;238m  23[0m   [38;5;238m│[0m [38;5;231m[[0m[38;5;149mbuild-system[0m[38;5;231m][0m
+    [38;5;238m  24[0m   [38;5;238m│[0m [38;5;203mrequires[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;231m[[0m[38;5;186m"[0m[38;5;186mpoetry-core>=1.0.0[0m[38;5;186m"[0m[38;5;231m][0m
+    [38;5;238m  25[0m   [38;5;238m│[0m [38;5;203mbuild-backend[0m[38;5;231m [0m[38;5;231m=[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186mpoetry.core.masonry.api[0m[38;5;186m"[0m
+    [38;5;238m───────┴────────────────────────────────────────────────────────────────────────[0m
+
+
+
+```python
+!bat example_project/example_project/runtime.py
+```
+
+    [38;5;238m───────┬────────────────────────────────────────────────────────────────────────[0m
+           [38;5;238m│ [0mFile: [1mexample_project/example_project/runtime.py[0m
+    [38;5;238m───────┼────────────────────────────────────────────────────────────────────────[0m
+    [38;5;238m   1[0m   [38;5;238m│[0m [38;5;203mimport[0m[38;5;231m [0m[38;5;231mnumpy[0m[38;5;231m [0m[38;5;203mas[0m[38;5;231m [0m[38;5;231mnp[0m
+    [38;5;238m   2[0m   [38;5;238m│[0m [38;5;203mfrom[0m[38;5;231m [0m[38;5;231mmlserver[0m[38;5;231m.[0m[38;5;231mmodel[0m[38;5;231m [0m[38;5;203mimport[0m[38;5;231m [0m[38;5;231mMLModel[0m
+    [38;5;238m   3[0m   [38;5;238m│[0m [38;5;203mfrom[0m[38;5;231m [0m[38;5;231mmlserver[0m[38;5;231m.[0m[38;5;231msettings[0m[38;5;231m [0m[38;5;203mimport[0m[38;5;231m [0m[38;5;231mModelSettings[0m
+    [38;5;238m   4[0m   [38;5;238m│[0m [38;5;203mfrom[0m[38;5;231m [0m[38;5;231mfastapi[0m[38;5;231m [0m[38;5;203mimport[0m[38;5;231m [0m[38;5;231mstatus[0m
+    [38;5;238m   5[0m   [38;5;238m│[0m [38;5;203mfrom[0m[38;5;231m [0m[38;5;231mmlserver[0m[38;5;231m.[0m[38;5;231mutils[0m[38;5;231m [0m[38;5;203mimport[0m[38;5;231m [0m[38;5;231mget_model_uri[0m
+    [38;5;238m   6[0m   [38;5;238m│[0m [38;5;203mfrom[0m[38;5;231m [0m[38;5;231mmlserver[0m[38;5;231m.[0m[38;5;231merrors[0m[38;5;231m [0m[38;5;203mimport[0m[38;5;231m [0m[38;5;231mInvalidModelURI[0m[38;5;231m,[0m[38;5;231m [0m[38;5;231mMLServerError[0m
+    [38;5;238m   7[0m   [38;5;238m│[0m [38;5;203mfrom[0m[38;5;231m [0m[38;5;231mmlserver[0m[38;5;231m.[0m[38;5;231mtypes[0m[38;5;231m [0m[38;5;203mimport[0m[38;5;231m [0m[38;5;231m([0m
+    [38;5;238m   8[0m   [38;5;238m│[0m [38;5;231m    [0m[38;5;231mInferenceRequest[0m[38;5;231m,[0m
+    [38;5;238m   9[0m   [38;5;238m│[0m [38;5;231m    [0m[38;5;231mInferenceResponse[0m[38;5;231m,[0m
+    [38;5;238m  10[0m   [38;5;238m│[0m [38;5;231m)[0m
+    [38;5;238m  11[0m   [38;5;238m│[0m [38;5;203mfrom[0m[38;5;231m [0m[38;5;231mmlserver[0m[38;5;231m.[0m[38;5;231mcodecs[0m[38;5;231m [0m[38;5;203mimport[0m[38;5;231m [0m[38;5;231mNumpyCodec[0m[38;5;231m,[0m[38;5;231m [0m[38;5;231mNumpyRequestCodec[0m
+    [38;5;238m  12[0m   [38;5;238m│[0m [38;5;203mfrom[0m[38;5;231m [0m[38;5;231mexample_project[0m[38;5;231m.[0m[38;5;231mcommon[0m[38;5;231m [0m[38;5;203mimport[0m[38;5;231m [0m[38;5;231mExampleProjectSettings[0m
+    [38;5;238m  13[0m   [38;5;238m│[0m 
+    [38;5;238m  14[0m   [38;5;238m│[0m 
+    [38;5;238m  15[0m   [38;5;238m│[0m [38;5;149mclass[0m[38;5;231m [0m[4;38;5;81mExampleProject[0m[38;5;231m([0m[4;38;5;149mMLModel[0m[38;5;231m)[0m[38;5;231m:[0m
+    [38;5;238m  16[0m   [38;5;238m│[0m [38;5;231m    [0m[38;5;242m"""[0m[38;5;242mRuntime class for specific Huggingface models[0m[38;5;242m"""[0m
+    [38;5;238m  17[0m   [38;5;238m│[0m 
+    [38;5;238m  18[0m   [38;5;238m│[0m [38;5;231m    [0m[38;5;149mdef[0m[38;5;231m [0m[38;5;81m__init__[0m[38;5;231m([0m[38;5;208mself[0m[38;5;231m,[0m[38;5;231m [0m[38;5;208msettings[0m[38;5;231m:[0m[38;5;231m [0m[38;5;231mModelSettings[0m[38;5;231m)[0m[38;5;231m:[0m
+    [38;5;238m  19[0m   [38;5;238m│[0m 
+    [38;5;238m  20[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231m_extra_settings[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;231mExampleProjectSettings[0m[38;5;231m([0m[38;5;203m*[0m[38;5;203m*[0m[38;5;231msettings[0m[38;5;231m.[0m[38;5;231mparame[0m
+    [38;5;238m    [0m   [38;5;238m│[0m [38;5;231mters[0m[38;5;231m.[0m[38;5;231mextra[0m[38;5;231m)[0m[38;5;231m  [0m[38;5;242m#[0m[38;5;242m type: ignore[0m
+    [38;5;238m  21[0m   [38;5;238m│[0m 
+    [38;5;238m  22[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;81msuper[0m[38;5;231m([0m[38;5;231m)[0m[38;5;231m.[0m[38;5;81m__init__[0m[38;5;231m([0m[38;5;231msettings[0m[38;5;231m)[0m
+    [38;5;238m  23[0m   [38;5;238m│[0m 
+    [38;5;238m  24[0m   [38;5;238m│[0m [38;5;231m    [0m[38;5;203masync[0m[38;5;231m [0m[38;5;149mdef[0m[38;5;231m [0m[38;5;149mload[0m[38;5;231m([0m[38;5;208mself[0m[38;5;231m)[0m[38;5;231m [0m[38;5;231m->[0m[38;5;231m [0m[38;5;149mbool[0m[38;5;231m:[0m
+    [38;5;238m  25[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;242m#[0m[38;5;242m Simple showcase reading a lambda as string either from file o[0m
+    [38;5;238m    [0m   [38;5;238m│[0m [38;5;242mr [0m
+    [38;5;238m  26[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;203mtry[0m[38;5;231m:[0m
+    [38;5;238m  27[0m   [38;5;238m│[0m [38;5;231m            [0m[38;5;231mmodel_uri[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;203mawait[0m[38;5;231m [0m[38;5;231mget_model_uri[0m[38;5;231m([0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231m_settings[0m[38;5;231m)[0m
+    [38;5;238m  28[0m   [38;5;238m│[0m [38;5;231m            [0m[38;5;203mwith[0m[38;5;231m [0m[38;5;81mopen[0m[38;5;231m([0m[38;5;231mmodel_uri[0m[38;5;231m,[0m[38;5;231m [0m[38;5;186m"[0m[38;5;186mr[0m[38;5;186m"[0m[38;5;231m)[0m[38;5;231m [0m[38;5;203mas[0m[38;5;231m [0m[38;5;231mf[0m[38;5;231m:[0m
+    [38;5;238m  29[0m   [38;5;238m│[0m [38;5;231m                [0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231m_model[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;81meval[0m[38;5;231m([0m[38;5;231mf[0m[38;5;231m.[0m[38;5;231mread[0m[38;5;231m([0m[38;5;231m)[0m[38;5;231m)[0m
+    [38;5;238m  30[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;203mexcept[0m[38;5;231m [0m[38;5;231m([0m[38;5;231mInvalidModelURI[0m[38;5;231m,[0m[38;5;231m [0m[38;5;231mIsADirectoryError[0m[38;5;231m)[0m[38;5;231m:[0m
+    [38;5;238m  31[0m   [38;5;238m│[0m [38;5;231m            [0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231m_model[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;81meval[0m[38;5;231m([0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231m_extra_settings[0m[38;5;231m.[0m[38;5;231mlambda_value[0m[38;5;231m)[0m
+    [38;5;238m  32[0m   [38;5;238m│[0m 
+    [38;5;238m  33[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;203mif[0m[38;5;231m [0m[38;5;203mnot[0m[38;5;231m [0m[38;5;81mcallable[0m[38;5;231m([0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231m_model[0m[38;5;231m)[0m[38;5;231m:[0m
+    [38;5;238m  34[0m   [38;5;238m│[0m [38;5;231m            [0m[38;5;203mraise[0m[38;5;231m [0m[38;5;231mMLServerError[0m[38;5;231m([0m[38;5;186m"[0m[38;5;186mInvalid lambda value provided[0m[38;5;186m"[0m[38;5;231m,[0m[38;5;231m [0m[38;5;231mstatus[0m[38;5;231m[0m
+    [38;5;238m    [0m   [38;5;238m│[0m [38;5;231m.[0m[38;5;231mHTTP_500_INTERNAL_SERVER_ERROR[0m[38;5;231m)[0m
+    [38;5;238m  35[0m   [38;5;238m│[0m 
+    [38;5;238m  36[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231mready[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;141mTrue[0m
+    [38;5;238m  37[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;203mreturn[0m[38;5;231m [0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231mready[0m
+    [38;5;238m  38[0m   [38;5;238m│[0m 
+    [38;5;238m  39[0m   [38;5;238m│[0m [38;5;231m    [0m[38;5;203masync[0m[38;5;231m [0m[38;5;149mdef[0m[38;5;231m [0m[38;5;149mpredict[0m[38;5;231m([0m[38;5;208mself[0m[38;5;231m,[0m[38;5;231m [0m[38;5;208mpayload[0m[38;5;231m:[0m[38;5;231m [0m[38;5;231mInferenceRequest[0m[38;5;231m)[0m[38;5;231m [0m[38;5;231m->[0m[38;5;231m [0m[38;5;231mInferenceResp[0m
+    [38;5;238m    [0m   [38;5;238m│[0m [38;5;231monse[0m[38;5;231m:[0m
+    [38;5;238m  40[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;242m"""[0m
+    [38;5;238m  41[0m   [38;5;238m│[0m [38;5;242m        Prediction request[0m
+    [38;5;238m  42[0m   [38;5;238m│[0m [38;5;242m        [0m[38;5;242m"""[0m
+    [38;5;238m  43[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;242m#[0m[38;5;242m For more advanced request decoding see MLServer codecs docume[0m
+    [38;5;238m    [0m   [38;5;238m│[0m [38;5;242mntation[0m
+    [38;5;238m  44[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;231mmodel_input[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;231mNumpyRequestCodec[0m[38;5;231m.[0m[38;5;231mdecode[0m[38;5;231m([0m[38;5;231mpayload[0m[38;5;231m)[0m
+    [38;5;238m  45[0m   [38;5;238m│[0m 
+    [38;5;238m  46[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;231mmodel_output[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231m_model[0m[38;5;231m([0m[38;5;231mmodel_input[0m[38;5;231m)[0m
+    [38;5;238m  47[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;231mmodel_output_np[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;231mnp[0m[38;5;231m.[0m[38;5;231marray[0m[38;5;231m([0m[38;5;231mmodel_output[0m[38;5;231m)[0m
+    [38;5;238m  48[0m   [38;5;238m│[0m 
+    [38;5;238m  49[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;231mencoded_output[0m[38;5;231m [0m[38;5;203m=[0m[38;5;231m [0m[38;5;231mNumpyCodec[0m[38;5;231m.[0m[38;5;231mencode[0m[38;5;231m([0m[38;5;186m"[0m[38;5;186mpredict[0m[38;5;186m"[0m[38;5;231m,[0m[38;5;231m [0m[38;5;231mmodel_output_np[0m[38;5;231m)[0m
+    [38;5;238m  50[0m   [38;5;238m│[0m 
+    [38;5;238m  51[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;203mreturn[0m[38;5;231m [0m[38;5;231mInferenceResponse[0m[38;5;231m([0m
+    [38;5;238m  52[0m   [38;5;238m│[0m [38;5;231m            [0m[38;5;208mmodel_name[0m[38;5;203m=[0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231mname[0m[38;5;231m,[0m
+    [38;5;238m  53[0m   [38;5;238m│[0m [38;5;231m            [0m[38;5;208mmodel_version[0m[38;5;203m=[0m[38;5;231mself[0m[38;5;231m.[0m[38;5;231mversion[0m[38;5;231m,[0m
+    [38;5;238m  54[0m   [38;5;238m│[0m [38;5;231m            [0m[38;5;208moutputs[0m[38;5;203m=[0m[38;5;231m[[0m[38;5;231mencoded_output[0m[38;5;231m][0m[38;5;231m,[0m
+    [38;5;238m  55[0m   [38;5;238m│[0m [38;5;231m        [0m[38;5;231m)[0m
+    [38;5;238m───────┴────────────────────────────────────────────────────────────────────────[0m
+
+
+
+```python
+!make -C example_project/ local-run
+```
+
+    make: Entering directory '/home/alejandro/Programming/fml-security/example_project'
+    mlserver start docs/examples/. &
+    make: Leaving directory '/home/alejandro/Programming/fml-security/example_project'
+
+
+
+```python
+!make -C example_project/ local-test-request
+```
+
+    make: Entering directory '/home/alejandro/Programming/fml-security/example_project'
+    curl http://localhost:8080/v2/models/test-model/infer \
+    	-H "Content-Type: application/json" \
+    	-d '{"inputs":[{"name":"test_input","shape":[3],"datatype":"INT32","data":[1,2,3]}]}'
+    {"model_name":"test-model","model_version":null,"id":"894a189e-cce3-4329-aa71-495d5b61621e","parameters":null,"outputs":[{"name":"predict","shape":[],"datatype":"INT64","parameters":null,"data":[6]}]}make: Leaving directory '/home/alejandro/Programming/fml-security/example_project'
+
+
+
+```python
+!curl http://localhost:8080/v2/models/test-model/infer \
+	-H "Content-Type: application/json" \
+	-d '{"inputs":[{"name":"test_input","shape":[3],"datatype":"INT32","data":[1,2,3]}]}'
+```
+
+    {"model_name":"test-model","model_version":null,"id":"1aceb79b-15da-48fd-b17b-b3354cd068c0","parameters":null,"outputs":[{"name":"predict","shape":[],"datatype":"INT64","parameters":null,"data":[6]}]}
+
+
+```python
+!make -C example_project/ security-local-code
+```
+
+    make: Entering directory '/home/alejandro/Programming/fml-security/example_project'
+    bandit .
+    [main]	INFO	profile include tests: None
+    [main]	INFO	profile exclude tests: None
+    [main]	INFO	cli include tests: None
+    [main]	INFO	cli exclude tests: None
+    [main]	INFO	running on Python 3.7.10
+    [manager]	WARNING	Skipping directory (.), use -r flag to scan contents
+    [95mRun started:2022-06-04 08:24:43.129814[0m
+    [95m
+    Test results:[0m
+    	No issues identified.
+    [95m
+    Code scanned:[0m
+    	Total lines of code: 0
+    	Total lines skipped (#nosec): 0
+    [95m
+    Run metrics:[0m
+    	Total issues (by severity):
+    		Undefined: 0
+    		Low: 0
+    		Medium: 0
+    		High: 0
+    	Total issues (by confidence):
+    		Undefined: 0
+    		Low: 0
+    		Medium: 0
+    		High: 0
+    [95mFiles skipped (0):[0m
+    make: Leaving directory '/home/alejandro/Programming/fml-security/example_project'
+
+
+
+```python
+!make -C example_project/ security-local-dependencies
+```
+
+    make: Entering directory '/home/alejandro/Programming/fml-security/example_project'
+    poetry export --without-hashes -f requirements.txt | safety check --full-report --stdin
+    [33mWarning: unpinned requirement 'NoCompatiblePythonVersionFound' found in <stdin>, unable to check.[0m
+    +==============================================================================+
+    |                                                                              |
+    |                               /$$$$$$            /$$                         |
+    |                              /$$__  $$          | $$                         |
+    |           /$$$$$$$  /$$$$$$ | $$  \__//$$$$$$  /$$$$$$   /$$   /$$           |
+    |          /$$_____/ |____  $$| $$$$   /$$__  $$|_  $$_/  | $$  | $$           |
+    |         |  $$$$$$   /$$$$$$$| $$_/  | $$$$$$$$  | $$    | $$  | $$           |
+    |          \____  $$ /$$__  $$| $$    | $$_____/  | $$ /$$| $$  | $$           |
+    |          /$$$$$$$/|  $$$$$$$| $$    |  $$$$$$$  |  $$$$/|  $$$$$$$           |
+    |         |_______/  \_______/|__/     \_______/   \___/   \____  $$           |
+    |                                                          /$$  | $$           |
+    |                                                         |  $$$$$$/           |
+    |  by pyup.io                                              \______/            |
+    |                                                                              |
+    +==============================================================================+
+    | REPORT                                                                       |
+    | checked 0 packages, using free DB (updated once a month)                     |
+    +==============================================================================+
+    | No known security vulnerabilities found.                                     |
+    +==============================================================================+[0m
+    make: Leaving directory '/home/alejandro/Programming/fml-security/example_project'
+
+
+
+```python
+!make -C example_project/ security-local-dependencies-old
+```
+
+    make: Entering directory '/home/alejandro/Programming/fml-security/example_project'
+    poetry export --without-hashes -f requirements.txt | piprot --latest --outdated -
+    Looks like you've been keeping up to date, time for a delicious beverage!
+    make: Leaving directory '/home/alejandro/Programming/fml-security/example_project'
+
 
 
 ```python

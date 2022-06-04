@@ -1,0 +1,9 @@
+{
+    "name": "test-model",
+    "implementation": "example_project.ExampleProject",
+    "parameters": {
+        "extra": {
+            "lambda_value": "lambda x: sum(x)"
+        }
+    }
+}

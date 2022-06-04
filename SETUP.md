@@ -86,7 +86,38 @@ helm upgrade --install minio minio/minio \
     --namespace minio-system
 ```
 
-    Process is interrupted.
+    namespace/minio-system created
+    "minio" already exists with the same configuration, skipping
+    Release "minio" does not exist. Installing it now.
+    NAME: minio
+    LAST DEPLOYED: Tue May 10 17:00:50 2022
+    NAMESPACE: minio-system
+    STATUS: deployed
+    REVISION: 1
+    TEST SUITE: None
+    NOTES:
+    Minio can be accessed via port 9000 on the following DNS name from within your cluster:
+    minio.minio-system.svc.cluster.local
+    
+    To access Minio from localhost, run the below commands:
+    
+      1. export POD_NAME=$(kubectl get pods --namespace minio-system -l "release=minio" -o jsonpath="{.items[0].metadata.name}")
+    
+      2. kubectl port-forward $POD_NAME 9000 --namespace minio-system
+    
+    Read more about port forwarding here: http://kubernetes.io/docs/user-guide/kubectl/kubectl_port-forward/
+    
+    You can now access Minio server on http://localhost:9000. Follow the below steps to connect to Minio server with mc client:
+    
+      1. Download the Minio mc client - https://docs.minio.io/docs/minio-client-quickstart-guide
+    
+      2. Get the ACCESS_KEY=$(kubectl get secret minio -o jsonpath="{.data.accesskey}" | base64 --decode) and the SECRET_KEY=$(kubectl get secret minio -o jsonpath="{.data.secretkey}" | base64 --decode)
+    
+      3. mc alias set minio-local http://localhost:9000 "$ACCESS_KEY" "$SECRET_KEY" --api s3v4
+    
+      4. mc ls minio-local
+    
+    Alternately, you can use your browser or the Minio SDK to access the server - https://docs.minio.io/categories/17
 
 
 #### Port orward Minio to access locally
