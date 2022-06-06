@@ -21,6 +21,8 @@
 
 This Repo contains a set of resources relevant to the talk "Secure Machine Learning at Scale with MLSecOps", and provides a set of examples to showcase practical common security flaws throughout the multiple phases of the machine learning lifecycle.
 
+We also present ways to mitigate and avoid these security vulnerabilities, which are grouped under the ["SML Security (Safe ML Security)" repo](https://github.com/EthicalML/sml-security/).
+
 
 ## Relevant Links
 
@@ -30,7 +32,7 @@ Below are links to resources related to the talk, as well as references and rele
 
 | | | |
 |-|-|-|
-|[📄 Presentaiton Slides](https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🗣️ Talk Link (Coming Soon)](#) | [📽️ Talk Video (Coming Soon)](#)|
+|[📄 Presentaiton Slides](https://docs.google.com/presentation/d/1Gu0We8RcMHksWc-7FCy_kYNfH8rq_c6qcAOsacSLAbE/edit#slide=id.g1041fb76f2f_0_177) |[🗣️ Safe Machine Learning Project Template](https://github.com/EthicalML/sml-security/) | [📽️ Talk Video](https://www.youtube.com/watch?v=82uiA5evtyU)|
 
 
 ### Navigating the Repo Examples
@@ -44,6 +46,7 @@ Below is the direct links to each of the headers that map to the main key sectio
 * [Code Scans](#5---code-scans)
 * [Container Scans](#6---container-scan)
 * [Honourable Mentions](#honourable-mentions)
+* [Safe ML Project Template](#safe-ml-project-template)
 
 
 ### Links to Other Talks and Relevant Resources
@@ -190,7 +193,7 @@ with open("fml-artifacts/safe/model.joblib", "rb") as f: print(f.readlines())
 !mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
 ```
 
-    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 54.76 KiB/s 0s[0m[0m[m[32;1m
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 75.93 KiB/s 0s[0m[0m
 
 
 ```bash
@@ -211,7 +214,7 @@ spec:
 END
 ```
 
-    seldondeployment.machinelearning.seldon.io/model-safe created
+    seldondeployment.machinelearning.seldon.io/model-safe unchanged
 
 
 
@@ -219,7 +222,7 @@ END
 !kubectl get pods | grep model-safe
 ```
 
-    model-safe-default-0-classifier-554dcc575b-8j2lf     2/2     Running   0          91m
+    model-safe-default-0-classifier-68f495d845-l9ff9     2/2     Running   0          41m
 
 
 
@@ -238,7 +241,7 @@ requests.post(url, json={"data": {"ndarray": [[1,2,3,4]]}}).json()
       'ndarray': [[0.0006985194531162835,
         0.00366803903943666,
         0.995633441507447]]},
-     'meta': {'requestPath': {'classifier': 'seldonio/sklearnserver:1.14.0-dev'}}}
+     'meta': {'requestPath': {'classifier': 'seldonio/sklearnserver:1.13.1'}}}
 
 
 
@@ -312,7 +315,7 @@ with open("fml-artifacts/unsafe/model.joblib", "rb") as f: print(f.readlines())
 !mc cp -r fml-artifacts/ minio-seldon/fml-artifacts/
 ```
 
-    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 110.68 KiB/s 0s[0m[0m
+    ...el.joblib:  1.05 KiB / 1.05 KiB ┃▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓┃ 111.11 KiB/s 0s[0m[0m
 
 
 ```bash
@@ -342,8 +345,8 @@ END
 ```
 
     NAME                                                 READY   STATUS    RESTARTS   AGE
-    model-safe-default-0-classifier-554dcc575b-8j2lf     2/2     Running   0          96m
-    model-unsafe-default-0-classifier-75679bbd57-bqcdj   2/2     Running   0          89m
+    model-safe-default-0-classifier-68f495d845-l9ff9     2/2     Running   0          43m
+    model-unsafe-default-0-classifier-85969ff86c-kd62w   2/2     Running   0          43m
 
 
 
@@ -355,9 +358,9 @@ kubectl exec $UNSAFE_POD -c classifier -- head -5 pwnd.txt
 
     SERVICE_TYPE=MODEL
     LC_ALL=C.UTF-8
-    SKLEARN_DEFAULT_PORT_8000_TCP_PROTO=tcp
     MODEL_UNSAFE_DEFAULT_SERVICE_PORT_GRPC=5001
-    SKLEARN_DEFAULT_SERVICE_HOST=10.100.66.186
+    MODEL_UNSAFE_DEFAULT_SERVICE_PORT_HTTP=8000
+    MODEL_SAFE_DEFAULT_PORT_5001_TCP_PROTO=tcp
 
 
 #### Now reload the insecure pickle
@@ -379,8 +382,8 @@ model_unsafe = joblib.load("fml-artifacts/unsafe/model.joblib")
 !head -4 pwnd.txt
 ```
 
-    CONDA_PROMPT_MODIFIER=(fml-security) 
-    TMUX=/tmp/tmux-1000/default,94,0
+    CONDA_PROMPT_MODIFIER=(base) 
+    TMUX=/tmp/tmux-1000/default,110,0
     PYSPARK_DRIVER_PYTHON=jupyter
     USER=alejandro
 
@@ -1033,7 +1036,7 @@ Above are a set of honorable mentions that are not covered in this notebook, but
 
 ![](images/omlsp.jpg)
 
-## Best Practices for ML Security
+## Safe ML Project Template
 
 
 ```python
